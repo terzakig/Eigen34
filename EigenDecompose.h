@@ -636,19 +636,20 @@ namespace Eigen34
   
   
   
-  // Get the eigenvector of the largest eigenvalue
+  // Get the eigenvector of the largest eigenvalue of a 3x3 matrix.
+  // NOTE: This function will return the zero vector even if no eigenvalues exist
   template<typename P>
   std::vector<P> PrincipalEigenvector4x4(P* M)
   {	
     // First obtain the eigenvalues of M
     auto eigenvalues = EigenValues4x4(M);
     if (eigenvalues.size() == 0) return std::vector<P>({0, 0, 0, 0});
-    // Now find the lrhest eigenvalue in absolute value.
-    auto absmaxit = std::max_element( eigenvalues.begin(), 
-				   eigenvalues.end() , 
-				   [](const int& a, const int& b) { return fabs(a) < fabs(b);}
-				  );
-    P lambda = *absmaxit;
+    //auto absmaxit = std::max_element( eigenvalues.begin(), 
+	//			   eigenvalues.end() , 
+	//			   [](const int& a, const int& b) { return fabs(a) < fabs(b);}
+	//			  );
+    //P lambda = *absmaxit;
+    P lambda = eigenvalues[eigenvalues.size()-1]; // returning the largest eigenvalue (instead or trhe largest in absolute value)
     if (lambda == 0) return std::vector<P>({0, 0, 0, 0});
     // Now obtaining a vector containing the M-lambda * eye(3)
     std::vector<P> A;
@@ -663,22 +664,23 @@ namespace Eigen34
   }
  
  
-  // Get the eigenvector of the largest eigenvalue
+  // Get the eigenvector of the largest eigenvalue of a 4x4 matrix.
+  // NOTE: This function will return the zero vector even if no eigenvalues exist
   template<typename P>
   std::vector<P> PrincipalEigenvector3x3(P* M)
   {	
     // First obtain the eigenvalues of M
     auto eigenvalues = EigenValues3x3(M);
     if (eigenvalues.size() == 0) return std::vector<P>({0, 0, 0});
-    // Now find the lrhest eigenvalue in absolute value.
-    auto maxit = std::max_element( eigenvalues.begin(), 
-				   eigenvalues.end() , 
-				   [](const int& a, const int& b) { return fabs(a) < fabs(b); } 
-				 );
+    //auto maxit = std::max_element( eigenvalues.begin(), 
+	//			   eigenvalues.end() , 
+	//			   [](const int& a, const int& b) { return fabs(a) < fabs(b); } 
+	//			 );
 
-    P lambda = *maxit;
+    //P lambda = *maxit;
+    P lambda = eigenvalues[eigenvalues.size()-1]; // get the largest eigenvalue
     // if there are only zero eigenvalues, return the zero vector
-    if (lambda == 0) return std::vector<P>( {0, 0, 0} );
+    if (lambda == 0) return std::vector<P>( {0, 0, 0} ); // extra check
     
     // Now obtaining a vector containing the M-lambda * eye(3)
     std::vector<P> A;
@@ -724,7 +726,7 @@ namespace Eigen34
       
     }
     
-    // return the decomposition (in arbitrary order)
+    // return the decomposition (in ascending eigenvalue order)
     return std::pair< std::vector<P>, std::vector<std::vector<P> > >(eigenvalues, eigenvectors);
     
   }
@@ -761,7 +763,7 @@ namespace Eigen34
       
     }
     
-    // return the decomposition (in arbitrary ordering)
+    // return the decomposition (in ascending eigenvalue order)
     return std::pair< std::vector<P>, std::vector<std::vector<P>> >( eigenvalues,  eigenvectors );
     
   }
