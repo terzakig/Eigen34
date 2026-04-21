@@ -12,34 +12,36 @@
 
 #include <vector>
 #include <utility>
-#include <math.h>
+#include <cmath>
 #include <algorithm>
-#include "PolySolvers.h"
 
 #include <iostream>
 #include <ostream>
+#include <cstdlib>
 
-// The 4x4 implies that the namespace contains algorithms
+#include "PolySolvers.h"
+
+// The 34 implies that the namespace contains algorithms
 // for the eigen decomposition of 3x3 or 4x4 matrices.
 //
 namespace Eigen34
 {
 
   /// <summary>
-  /// This function performs two steps of Gauss-Jordan elmination in a 3x3 matrix.
+  /// This function performs two steps of Gauss-Jordan elimination in a 3x3 matrix.
   /// NOTE: The function assumes that the matrix provided is RANK-2 and therefore the solution
   //        will be the null space (vector). This way we obtain an eigen vector in two steps.
   /// </summary>
   /// <param name="std::vector<P> flat_mat"> is the coefficient matrix in flat form</param>
   /// <returns>std::vector<P> solutions </returns>
   template <typename P>
-  std::vector<P> GaussJordan3x3(std::vector<P> flat_mat)
+  std::vector<P> GaussJordan3x3(const std::vector<P>& flat_mat)
   {
-    // For the first step of the Gauss-Jordan Pivoting, we need the max of the coefficient from list0Pivot
+    // For the first step of the Gauss-Jordan pivoting, we need the largest absolute value from flat_mat
     //
     auto absmax1it = std::max_element(flat_mat.begin(),
                                       flat_mat.end(),
-                                      [](const P &a, const P &b)
+                                      [](P a, P b)
                                       { return std::abs(a) < std::abs(b); });
 
     P max1 = *absmax1it;
@@ -51,11 +53,12 @@ namespace Eigen34
     if (max1 == 0)
       return std::vector<P>();
 
-    // For the second step of the Gauss-Jordan Pivoting, we will require the
+    // For the second step of the Gauss-Jordan pivoting, we will require the
     //  maximum of the elements of the resulting matrix.
     P max2;                   // The value of the absolute max in the next stage of the elimination (only need 2 stages for 3x3 matrices)
     int index2;               // the index of the absolute maximum in the next stage of the elimination
     std::vector<P> flat_mat1; // and the next matrix
+    flat_mat1.reserve(4);
 
     // Variable which contain the coordinates of a vector
     P x1 = 0, x2 = 0, x3 = 0;
@@ -66,7 +69,7 @@ namespace Eigen34
     // Taking cases according to where the maximum lies
     if (index1 == 0)
     {
-      // List of the value after the first step of the Gauss-Jordan Pivoting
+      // List of the value after the first step of the Gauss-Jordan pivoting
       flat_mat1.push_back(flat_mat[4] - ((flat_mat[1] * flat_mat[3]) / max1));
       flat_mat1.push_back(flat_mat[5] - ((flat_mat[2] * flat_mat[3]) / max1));
       flat_mat1.push_back(flat_mat[7] - ((flat_mat[1] * flat_mat[6]) / max1));
@@ -75,7 +78,7 @@ namespace Eigen34
       // Get maximum and minimum elements (in order to get the maximum in absolute value)
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
-                                        [](const P &a, const P &b)
+                                        [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
@@ -99,7 +102,7 @@ namespace Eigen34
       // Get maximum and minimum elements (in order to get the maximum in absolute value)
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
-                                        [](const P &a, const P &b)
+                                        [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
@@ -123,7 +126,7 @@ namespace Eigen34
       // Get maximum and minimum elements (in order to get the maximum in absolute value)
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
-                                        [](const P &a, const P &b)
+                                        [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
@@ -147,7 +150,7 @@ namespace Eigen34
       // Get maximum and minimum elements (in order to get the maximum in absolute value)
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
-                                        [](const P &a, const P &b)
+                                        [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
@@ -171,7 +174,7 @@ namespace Eigen34
       // Get maximum and minimum elements (in order to get the maximum in absolute value)
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
-                                        [](const P &a, const P &b)
+                                        [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
@@ -195,7 +198,7 @@ namespace Eigen34
       // Get maximum and minimum elements (in order to get the maximum in absolute value)
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
-                                        [](const P &a, const P &b)
+                                        [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
@@ -219,7 +222,7 @@ namespace Eigen34
       // Get maximum and minimum elements (in order to get the maximum in absolute value)
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
-                                        [](const P &a, const P &b)
+                                        [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
@@ -243,7 +246,7 @@ namespace Eigen34
       // Get maximum and minimum elements (in order to get the maximum in absolute value)
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
-                                        [](const P &a, const P &b)
+                                        [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
@@ -267,7 +270,7 @@ namespace Eigen34
       // Get maximum and minimum elements (in order to get the maximum in absolute value)
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
-                                        [](const P &a, const P &b)
+                                        [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
@@ -306,9 +309,9 @@ namespace Eigen34
     *(pX[0]) = -((listFinalCoef[0] * *(pX[1])) / max1) - ((listFinalCoef[1] * *(pX[2])) / max1);
 
     // normalize
-    P norm = sqrt(x1 * x1 + x2 * x2 + x3 * x3);
+    P invnorm = 1 / std::sqrt(x1 * x1 + x2 * x2 + x3 * x3);
 
-    return std::vector<P>({x1 / norm, x2 / norm, x3 / norm});
+    return std::vector<P>({x1 * invnorm, x2 * invnorm, x3 * invnorm});
   }
 
   ///
@@ -316,11 +319,10 @@ namespace Eigen34
   ///
   ///
   template <typename P>
-  std::vector<P> GaussJordanFirstStep(std::vector<P> flat_mat, int row, int col)
+  std::vector<P> GaussJordanFirstStep(const std::vector<P>& flat_mat, int row, int col)
   {
-
-    // the result
     std::vector<P> result;
+    result.reserve(9); // 16-2*4+1
 
     for (int i = 0; i < 4; i++)
     {
@@ -340,17 +342,17 @@ namespace Eigen34
   ///
   /// The Gauss-Jordan elimination for Rank-3 4x4 matrices
   /// The steps are fixed and lead to a solution up to arbitrary scale.
-  /// This is how we solve for the eigenvectors of the a 4x4 marix.
+  /// This is how we solve for the eigenvectors of a 4x4 matrix.
   ///
   /// The input vector is a flat version of the 4x4 matrix
   ///
   template <typename P>
-  std::vector<P> GaussJordan4x4(std::vector<P> flat_mat)
+  std::vector<P> GaussJordan4x4(const std::vector<P>& flat_mat)
   {
-    // Working out the the index of the max coefficient (absolute value).
+    // Working out the index of the max coefficient (absolute value).
     auto absmax1it = std::max_element(flat_mat.begin(),
                                       flat_mat.end(),
-                                      [](const P &a, const P &b)
+                                      [](P a, P b)
                                       { return std::abs(a) < std::abs(b); });
 
     P max1 = *absmax1it;
@@ -367,10 +369,9 @@ namespace Eigen34
     // Cache for the result of 3x3 Gauss Jordan elimination
     std::vector<P> resultGaussJordan3x3;
 
-    // go...
     if (index1 == 0)
     {
-      /// We use the GaussJordan3x3 solver after the first step, which is the elimination of coeffcieints along column 0.
+      /// We use the GaussJordan3x3 solver after the first step, which is the elimination of coefficients along column 0.
       flat_mat1 = GaussJordanFirstStep(flat_mat, 0, 0);
       resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
       x2 = resultGaussJordan3x3[0];
@@ -380,7 +381,7 @@ namespace Eigen34
     }
     else if (index1 == 1)
     {
-      /// We use the GaussJordan3x3 solver after the first step, which is the elimination of coeffcieints along column 1.
+      /// We use the GaussJordan3x3 solver after the first step, which is the elimination of coefficients along column 1.
       flat_mat1 = GaussJordanFirstStep(flat_mat, 0, 1);
       resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
       x1 = resultGaussJordan3x3[0];
@@ -516,18 +517,78 @@ namespace Eigen34
     }
 
     // normalize the solution
-    P norm = sqrt(x1 * x1 + x2 * x2 + x3 * x3 + x4 * x4);
+    P invnorm = 1 / std::sqrt(x1 * x1 + x2 * x2 + x3 * x3 + x4 * x4);
 
-    return std::vector<P>({x1 / norm, x2 / norm, x3 / norm, x4 / norm});
+    return std::vector<P>({x1 * invnorm, x2 * invnorm, x3 * invnorm, x4 * invnorm});
+  }
+
+  // sorting networks for sorting small vectors in ascending order
+  template <typename P>
+  inline static void swap_(P& a, P& b)
+  {
+    P temp = a;
+    a = b;
+    b = temp;
+  }
+
+  // sort a vector of size two with the network [[0 1]]
+  template <typename P>
+  inline static void sortnet2(std::vector<P>& vec)
+  {
+    if (vec[0] > vec[1]) swap_(vec[0], vec[1]);
+  }
+
+  // sort a vector of size three with the network [[0 1][0 2][1 2]]
+  template <typename P>
+  inline static void sortnet3(std::vector<P>& vec)
+  {
+    if (vec[0] > vec[1]) swap_(vec[0], vec[1]);
+    if (vec[0] > vec[2]) swap_(vec[0], vec[2]);
+    if (vec[1] > vec[2]) swap_(vec[1], vec[2]);
+  }
+
+  // sort a vector of size four with the network [[0 1][2 3][0 2][1 3][1 2]]
+  template <typename P>
+  inline static void sortnet4(std::vector<P>& vec)
+  {
+    if (vec[0] > vec[1]) swap_(vec[0], vec[1]);
+    if (vec[2] > vec[3]) swap_(vec[2], vec[3]);
+    if (vec[0] > vec[2]) swap_(vec[0], vec[2]);
+    if (vec[1] > vec[3]) swap_(vec[1], vec[3]);
+    if (vec[1] > vec[2]) swap_(vec[1], vec[2]);
+  }
+
+  // sort a vector of size up to four with the appropriate network
+  template <typename P>
+  inline static void sortnet(std::vector<P>& vec)
+  {
+    switch (vec.size())
+    {
+      case 0:
+      case 1:
+	      // nothing to do
+	      return;
+      case 2:
+	      sortnet2(vec);
+	      return;
+      case 3:
+	      sortnet3(vec);
+	      return;
+      case 4:
+	      sortnet4(vec);
+	      return;
+      default:
+	      std::cerr << "Internal error in Eigen34::sortnet(), got " << vec.size() << "!\n";
+	      std::abort();
+    }
   }
 
   ///
-  /// Return the list of the eigenvalue of a 4x4 matrix.
-  /// Parameter is he argumen is a 1D array representing the 4x4 matrix
-  /// T
+  /// Return the list of the eigenvalues of a 4x4 matrix.
+  /// Argument is a 1D array representing the 4x4 matrix
   ///
   template <typename P>
-  std::vector<P> EigenValues4x4(P *array)
+  std::vector<P> EigenValues4x4(const P *array)
   {
 
     P a11 = array[0 * 4 + 0], a12 = array[0 * 4 + 1], a13 = array[0 * 4 + 2], a14 = array[0 * 4 + 3];
@@ -535,7 +596,7 @@ namespace Eigen34
     P a31 = array[2 * 4 + 0], a32 = array[2 * 4 + 1], a33 = array[2 * 4 + 2], a34 = array[2 * 4 + 3];
     P a41 = array[3 * 4 + 0], a42 = array[3 * 4 + 1], a43 = array[3 * 4 + 2], a44 = array[3 * 4 + 3];
 
-    // 1. Obtaining the coefficients of the characteristics polynomial of A11 - λ*I where A11 is the (1, 1) submatrix of A:
+    // 1. Obtaining the coefficients of the characteristic polynomial of A11 - λ*I where A11 is the (1, 1) submatrix of A:
     // A11 = [a22-λ a23 a24;
     //        a32 a33-λ a34;
     //        a42 a43 a44 - λ]
@@ -545,7 +606,7 @@ namespace Eigen34
     P C1 = a42 * a24 + a32 * a23 + a34 * a43 - a22 * a33 - a22 * a44 - a33 * a44;
     P C0 = a22 * a33 * a44 + a23 * a42 * a34 + a24 * a32 * a43 - a22 * a34 * a43 - a23 * a32 * a44 - a24 * a42 * a33;
 
-    // 2. Now multiplying with a11 to get a quartic polynomial with coeffcients W4, W3, W2, W1, W0 as follows:
+    // 2. Now multiplying with a11 to get a quartic polynomial with coefficients W4, W3, W2, W1, W0 as follows:
     P W4 = -C3,
       W3 = a11 * C3 - C2,
       W2 = a11 * C2 - C1,
@@ -580,15 +641,15 @@ namespace Eigen34
     std::vector<P> solution = PolySolvers::SolveQuartic(A4, A3, A2, A1, A0);
 
     // Put the solutions in ascending order
-    std::sort(solution.begin(), solution.end());
+    // std::sort(solution.begin(), solution.end());
+    sortnet(solution);
 
     return solution;
   }
 
   ///
   /// Return the list of the eigenvalues of a 3x3 matrix.
-  /// Parameter is he argumen is a 1D array representing the 4x4 matrix
-  /// T
+  /// Argument is a 1D array representing the 3x3 matrix
   ///
   template <typename P>
   std::vector<P> EigenValues3x3(const P *array)
@@ -612,7 +673,8 @@ namespace Eigen34
 
     std::vector<P> solution = PolySolvers::SolveCubic(coef1, coef2, coef3, coef4);
 
-    std::sort(solution.begin(), solution.end());
+    // std::sort(solution.begin(), solution.end());
+    sortnet(solution);
 
     return solution;
   }
@@ -620,7 +682,7 @@ namespace Eigen34
   // Get the eigenvector of the largest eigenvalue of a 3x3 matrix.
   // NOTE: This function will return the zero vector even if no eigenvalues exist
   template <typename P>
-  std::vector<P> PrincipalEigenvector4x4(P *M)
+  std::vector<P> PrincipalEigenvector4x4(const P *M)
   {
     // First obtain the eigenvalues of M
     auto eigenvalues = EigenValues4x4(M);
@@ -628,14 +690,15 @@ namespace Eigen34
       return std::vector<P>({0, 0, 0, 0});
     // auto absmaxit = std::max_element( eigenvalues.begin(),
     //			   eigenvalues.end() ,
-    //			   [](const P& a, const P& b) { return std::abs(a) < std::abs(b);}
+    //			   [](P a, P b) { return std::abs(a) < std::abs(b);}
     //			  );
     // P lambda = *absmaxit;
-    P lambda = eigenvalues[eigenvalues.size() - 1]; // returning the largest eigenvalue (instead or trhe largest in absolute value)
+    P lambda = eigenvalues[eigenvalues.size() - 1]; // returning the largest eigenvalue (instead of the largest in absolute value)
     if (lambda == 0)
       return std::vector<P>({0, 0, 0, 0});
-    // Now obtaining a vector containing the M-lambda * eye(3)
+    // Now obtain a vector containing the M-lambda * eye(3)
     std::vector<P> A;
+    A.reserve(16);
     A.push_back(M[0] - lambda);
     A.push_back(M[1]);
     A.push_back(M[2]);
@@ -653,14 +716,14 @@ namespace Eigen34
     A.push_back(M[14]);
     A.push_back(M[15] - lambda);
 
-    // Now get the eigenvector using the Gauss-jordan steps
+    // Now get the eigenvector using the Gauss-Jordan steps
     return GaussJordan4x4(A);
   }
 
   // Get the eigenvector of the largest eigenvalue of a 4x4 matrix.
   // NOTE: This function will return the zero vector even if no eigenvalues exist
   template <typename P>
-  std::vector<P> PrincipalEigenvector3x3(P *M)
+  std::vector<P> PrincipalEigenvector3x3(const P *M)
   {
     // First obtain the eigenvalues of M
     auto eigenvalues = EigenValues3x3(M);
@@ -668,7 +731,7 @@ namespace Eigen34
       return std::vector<P>({0, 0, 0});
     // auto maxit = std::max_element( eigenvalues.begin(),
     //			   eigenvalues.end() ,
-    //			   [](const P& a, const P& b) { return std::abs(a) < std::abs(b); }
+    //			   [](P a, P b) { return std::abs(a) < std::abs(b); }
     //			 );
 
     // P lambda = *maxit;
@@ -677,8 +740,9 @@ namespace Eigen34
     if (lambda == 0)
       return std::vector<P>({0, 0, 0}); // extra check
 
-    // Now obtaining a vector containing the M-lambda * eye(3)
+    // Now obtain a vector containing the M-lambda * eye(3)
     std::vector<P> A;
+    A.reserve(9);
     A.push_back(M[0] - lambda);
     A.push_back(M[1]);
     A.push_back(M[2]);
@@ -689,19 +753,21 @@ namespace Eigen34
     A.push_back(M[7]);
     A.push_back(M[8] - lambda);
 
-    // Now get the eigenvector using the Gauss-jordan steps
+    // Now get the eigenvector using the Gauss-Jordan steps
     return GaussJordan3x3(A);
   }
 
   // 3x3 Matrix eigen decomposition
   template <typename P>
-  std::pair<std::vector<P>, std::vector<std::vector<P>>> EigenDecompose3x3(P *M)
+  std::pair<std::vector<P>, std::vector<std::vector<P>>> EigenDecompose3x3(const P *M)
   {
+    static_assert(std::is_floating_point<P>::value, "EigenDecompose3x3 requires a floating point type!");
+
     // First obtain the eigenvalues of M
     auto eigenvalues = EigenValues3x3(M);
     // vector of eigenvectors
     std::vector<std::vector<P>> eigenvectors;
-    // return an empty eigenvalue list and a single eigenvector withg zeros in it
+    // return an empty eigenvalue list and a single eigenvector with zeros in it
     if (eigenvalues.size() == 0)
       return std::pair<std::vector<P>, std::vector<std::vector<P>>>(eigenvalues, eigenvectors);
 
@@ -709,7 +775,8 @@ namespace Eigen34
                       M[3], M[4], M[5],
                       M[6], M[7], M[8]});
 
-    for (int i = 0; i < eigenvalues.size(); i++)
+    eigenvectors.reserve(3);
+    for (size_t i = 0; i < eigenvalues.size(); i++)
     {
       // Now subtract the eigenvalue from the diagonal
       A[0] -= eigenvalues[i];
@@ -731,14 +798,16 @@ namespace Eigen34
 
   // 4x4 Matrix eigen decomposition
   template <typename P>
-  std::pair<std::vector<P>, std::vector<std::vector<P>>> EigenDecompose4x4(P *M)
+  std::pair<std::vector<P>, std::vector<std::vector<P>>> EigenDecompose4x4(const P *M)
   {
+    static_assert(std::is_floating_point<P>::value, "EigenDecompose4x4 requires a floating point type!");
+
     // First obtain the eigenvalues of M
     auto eigenvalues = EigenValues4x4(M);
     // vector of eigenvectors
     std::vector<std::vector<P>> eigenvectors;
 
-    // return an empty eigenvalue list and a single eigenvector withg zeros in it
+    // return an empty eigenvalue list and a single eigenvector with zeros in it
     if (eigenvalues.size() == 0)
       return std::pair<std::vector<P>, std::vector<std::vector<P>>>(eigenvalues, eigenvectors);
 
@@ -747,7 +816,8 @@ namespace Eigen34
                       M[8], M[9], M[10], M[11],
                       M[12], M[13], M[14], M[15]});
 
-    for (int i = 0; i < eigenvalues.size(); i++)
+    eigenvectors.reserve(4);
+    for (size_t i = 0; i < eigenvalues.size(); i++)
     {
       // Now subtract the eigenvalue from the diagonal
       A[0] -= eigenvalues[i];
