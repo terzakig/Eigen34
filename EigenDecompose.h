@@ -40,7 +40,7 @@ namespace Eigen34
     auto absmax1it = std::max_element(flat_mat.begin(),
                                       flat_mat.end(),
                                       [](const P &a, const P &b)
-                                      { return abs(a) < abs(b); });
+                                      { return std::abs(a) < std::abs(b); });
 
     P max1 = *absmax1it;
 
@@ -76,7 +76,7 @@ namespace Eigen34
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](const P &a, const P &b)
-                                        { return abs(a) < abs(b); });
+                                        { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
       // NOTE: Now max2it points to the absolute maximum !
@@ -100,7 +100,7 @@ namespace Eigen34
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](const P &a, const P &b)
-                                        { return abs(a) < abs(b); });
+                                        { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
       // NOTE: Now max2it points to the absolute maximum !
@@ -124,7 +124,7 @@ namespace Eigen34
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](const P &a, const P &b)
-                                        { return abs(a) < abs(b); });
+                                        { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
       // NOTE: Now max2it points to the absolute maximum !
@@ -144,15 +144,11 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[7] - ((flat_mat[4] * flat_mat[6]) / max1));
       flat_mat1.push_back(flat_mat[8] - ((flat_mat[5] * flat_mat[6]) / max1));
 
-      auto max2it = std::max_element(flat_mat1.begin(), flat_mat1.end());
-      auto min2it = std::min_element(flat_mat1.begin(), flat_mat1.end());
-      max2 = *max2it;
-
       // Get maximum and minimum elements (in order to get the maximum in absolute value)
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](const P &a, const P &b)
-                                        { return abs(a) < abs(b); });
+                                        { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
       // NOTE: Now max2it points to the absolute maximum !
@@ -176,7 +172,7 @@ namespace Eigen34
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](const P &a, const P &b)
-                                        { return abs(a) < abs(b); });
+                                        { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
       // NOTE: Now max2it points to the absolute maximum !
@@ -200,7 +196,7 @@ namespace Eigen34
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](const P &a, const P &b)
-                                        { return abs(a) < abs(b); });
+                                        { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
       // NOTE: Now max2it points to the absolute maximum !
@@ -224,7 +220,7 @@ namespace Eigen34
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](const P &a, const P &b)
-                                        { return abs(a) < abs(b); });
+                                        { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
       // NOTE: Now max2it points to the absolute maximum !
@@ -248,7 +244,7 @@ namespace Eigen34
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](const P &a, const P &b)
-                                        { return abs(a) < abs(b); });
+                                        { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
       // NOTE: Now max2it points to the absolute maximum !
@@ -272,7 +268,7 @@ namespace Eigen34
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](const P &a, const P &b)
-                                        { return abs(a) < abs(b); });
+                                        { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
 
       // NOTE: Now max2it points to the absolute maximum !
@@ -355,7 +351,7 @@ namespace Eigen34
     auto absmax1it = std::max_element(flat_mat.begin(),
                                       flat_mat.end(),
                                       [](const P &a, const P &b)
-                                      { return abs(a) < abs(b); });
+                                      { return std::abs(a) < std::abs(b); });
 
     P max1 = *absmax1it;
     int index1 = std::distance(flat_mat.begin(), absmax1it);
@@ -632,7 +628,7 @@ namespace Eigen34
       return std::vector<P>({0, 0, 0, 0});
     // auto absmaxit = std::max_element( eigenvalues.begin(),
     //			   eigenvalues.end() ,
-    //			   [](const P& a, const P& b) { return abs(a) < abs(b);}
+    //			   [](const P& a, const P& b) { return std::abs(a) < std::abs(b);}
     //			  );
     // P lambda = *absmaxit;
     P lambda = eigenvalues[eigenvalues.size() - 1]; // returning the largest eigenvalue (instead or trhe largest in absolute value)
@@ -672,7 +668,7 @@ namespace Eigen34
       return std::vector<P>({0, 0, 0});
     // auto maxit = std::max_element( eigenvalues.begin(),
     //			   eigenvalues.end() ,
-    //			   [](const P& a, const P& b) { return abs(a) < abs(b); }
+    //			   [](const P& a, const P& b) { return std::abs(a) < std::abs(b); }
     //			 );
 
     // P lambda = *maxit;
