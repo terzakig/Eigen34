@@ -1,5 +1,5 @@
 //
-// Analytical polynomial solvers. Implementation by Manolis Lourakis (forth)
+// Analytical polynomial solvers. Implementation by Manolis Lourakis (FORTH)
 //
 //
 
@@ -7,7 +7,7 @@
 #define __POLYSOLVERS_H__
 
 #include <vector>
-#include <math.h>
+#include <cmath>
 
 // #include <iostream>
 
@@ -18,7 +18,7 @@ namespace PolySolvers
     template <typename P>
     inline std::vector<P> SolveQuadratic(P a, P b, P c)
     {
-        const P EPS = 1E-10;
+        constexpr P EPS = std::numeric_limits<P>::epsilon() * 100;
         P delta = b * b - 4 * a * c;
         P inv_2a, sqrt_delta;
         P x1, x0;
@@ -49,7 +49,7 @@ namespace PolySolvers
             return std::vector<P>({x0});
         }
 
-        sqrt_delta = sqrt(delta);
+        sqrt_delta = std::sqrt(delta);
         x0 = (-b + sqrt_delta) * inv_2a;
         x1 = (-b - sqrt_delta) * inv_2a;
         return std::vector<P>({x0, x1});
@@ -59,7 +59,7 @@ namespace PolySolvers
     template <typename P>
     inline std::vector<P> SolveCubic(P a, P b, P c, P d)
     {
-        const P EPS = 1e-10; // Tolerance for floating-point inaccuracies
+        constexpr P EPS = std::numeric_limits<P>::epsilon() * 100; // tolerance for floating-point inaccuracies
 
         P inv_a, b_a, b_a2, c_a, d_a;
         P Q, R, Q3, D, b_a_3;
@@ -146,7 +146,7 @@ namespace PolySolvers
     template <typename P>
     inline std::vector<P> SolveQuartic(P a, P b, P c, P d, P e)
     {
-        const P EPS = 1e-10;
+        constexpr P EPS = std::numeric_limits<P>::epsilon() * 100;
         // Shortcut to cubic if constant is zero...
         if (std::abs(a) < EPS)
         {
@@ -193,8 +193,8 @@ namespace PolySolvers
         if (R2 < -EPS)
             return std::vector<P>();
 
-        R = sqrt(R2 < 0 ? 0 : R2); // Clamp to 0 to prevent NaN
-        R = sqrt(R2);
+        R = std::sqrt(R2 < 0 ? 0 : R2); // Clamp to 0 to prevent NaN
+        R = std::sqrt(R2);
         inv_R = 1.0 / R;
 
         nb_real_roots = 0;
@@ -209,7 +209,7 @@ namespace PolySolvers
             }
             else
             {
-                P sqrt_temp = sqrt(temp);
+                P sqrt_temp = std::sqrt(temp);
                 D2 = 0.75 * b2 - 2 * c + 2 * sqrt_temp;
                 E2 = D2 - 4 * sqrt_temp;
             }
@@ -225,7 +225,7 @@ namespace PolySolvers
         R_2 = 0.5 * R;
         if (D2 >= -EPS)
         {
-            P D = sqrt(D2 < 0 ? 0 : D2); // Clamp to 0 if necessary
+            P D = std::sqrt(D2 < 0 ? 0 : D2); // Clamp to 0 if necessary
             P D_2 = 0.5 * D;
             nb_real_roots = 2;
             x0 = R_2 + D_2 - b_4;
@@ -235,7 +235,7 @@ namespace PolySolvers
         /* calculate E^2 */
         if (E2 >= -EPS)
         {
-            P E = sqrt(E2 < 0 ? 0 : E2); // clamp to 0 if necessary
+            P E = std::sqrt(E2 < 0 ? 0 : E2); // clamp to 0 if necessary
             P E_2 = 0.5 * E;
             if (nb_real_roots == 0)
             {
