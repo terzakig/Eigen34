@@ -8,11 +8,57 @@
 #include <random>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 #include "PolySolvers.h"
 #include "EigenDecompose.h"
 
 using namespace std;
+
+/**
+ * @brief Verifies the eigendecomposition of an NxN matrix.
+ * @tparam N The dimension of the matrix (e.g., 3 or 4).
+ * @tparam P The precision type (float or double).
+ * @param M Pointer to the flat NxN matrix (row-major).
+ * @param decomp Pair containing eigenvalues and a vector of eigenvectors.
+ * @return true if Av = λv for all pairs within epsilon.
+ */
+template <size_t N, typename P>
+bool VerifyEigenDecomposition(const P *M, const std::pair<std::vector<P>, std::vector<std::vector<P>>>& decomp)
+{
+    const std::vector<P>& eigenvalues = decomp.first;
+    const std::vector<std::vector<P>>& eigenvectors = decomp.second;
+
+    // Adjust epsilon based on precision type
+    const P epsilon = (sizeof(P) == 4) ? static_cast<P>(1e-4) : static_cast<P>(1e-8);
+
+    for (size_t i = 0; i < decomp.first.size(); ++i) {
+        const P lambda = eigenvalues[i];
+        const std::vector<P>& v = eigenvectors[i];
+
+        // 1. Compute Av and compare with λv in one pass
+        for (size_t row = 0; row < N; ++row) {
+            P Av_row = 0;
+            for (size_t col = 0; col < N; ++col) {
+                // Compile-time constant N ensures indexing is correct for 3x3 or 4x4
+                Av_row += M[row * N + col] * v[col];
+            }
+
+            P lv_row = lambda * v[row];
+
+            // 2. Check the difference
+            if (std::abs(Av_row - lv_row) > epsilon) {
+                std::cout << "Verification FAILED for " << N << "x" << N
+                          << " matrix at Eigenpair " << i << ", Row "
+                          << row << std::endl;
+                return false;
+            }
+        }
+    }
+
+    std::cout << "Verification PASSED for " << N << "x" << N << " matrix." << std::endl;
+    return true;
+}
 
 int main()
 {
@@ -33,10 +79,12 @@ int main()
        << "    " << A[6] << " , " << A[7] << " , " << A[8] << " ] " << endl
        << endl;
   // print the eigenvalues and respective eigenvectors
-  for (int i = 0; i < decomposition3x3.first.size(); i++)
+  for (size_t i = 0; i < decomposition3x3.first.size(); i++)
   {
     cout << " Eigenvalue : " << decomposition3x3.first[i] << " | Eigenvector : [ " << decomposition3x3.second[i][0] << " , " << decomposition3x3.second[i][1] << " , " << decomposition3x3.second[i][2] << " ]" << endl;
   }
+  // verify the decomposition
+  VerifyEigenDecomposition<3>(A, decomposition3x3);
 
   // 2. Eigen-decomposition for a 4x4 matrix
   float B[] = {1, 5, 2, -1,
@@ -47,7 +95,7 @@ int main()
   cout << endl
        << " Eigen-decomposition of a 4x4 matrix" << endl
        << " --------------------" << endl;
-  cout << "C = " << endl
+  cout << "B = " << endl
        << "  [ " << B[0] << " , " << B[1] << " , " << B[2] << " , " << B[3] << " ; " << endl
        << "    " << B[4] << " , " << B[5] << " , " << B[6] << " , " << B[7] << " ; " << endl
        << "    " << B[8] << " , " << B[9] << " , " << B[10] << " , " << B[11] << " ; " << endl
@@ -55,12 +103,14 @@ int main()
        << endl;
 
   // print the eigenvalues and respective eigenvectors
-  for (int i = 0; i < decomposition4x4.first.size(); i++)
+  for (size_t i = 0; i < decomposition4x4.first.size(); i++)
   {
     cout << " Eigenvalue : " << decomposition4x4.first[i]
          << " | Eigenvector : [ " << decomposition4x4.second[i][0] << " , " << decomposition4x4.second[i][1] << " , " << decomposition4x4.second[i][2]
          << " , " << decomposition4x4.second[i][3] << " ]" << endl;
   }
+  // verify the decomposition
+  VerifyEigenDecomposition<4>(B, decomposition4x4);
 
   // 3. Eigen-decomposition for a 4x4 positive semi-definite matrix
   float C[] = {0.64444, 0.12222, 0.53333, 1.25556,
@@ -80,12 +130,14 @@ int main()
 
   decomposition4x4 = Eigen34::EigenDecompose4x4(C);
   // print the eigenvalues and respective eigenvectors
-  for (int i = 0; i < decomposition4x4.first.size(); i++)
+  for (size_t i = 0; i < decomposition4x4.first.size(); i++)
   {
     cout << " Eigenvalue : " << decomposition4x4.first[i]
          << " | Eigenvector : [ " << decomposition4x4.second[i][0] << " , " << decomposition4x4.second[i][1] << " , " << decomposition4x4.second[i][2]
          << " , " << decomposition4x4.second[i][3] << " ]" << endl;
   }
+  // verify the decomposition
+  VerifyEigenDecomposition<4>(C, decomposition4x4);
 
   return 1;
 }
