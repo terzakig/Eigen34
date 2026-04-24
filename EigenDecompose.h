@@ -47,7 +47,7 @@ namespace Eigen34
     P max1 = *absmax1it;
 
     // Get the index of max (in absolute value)
-    int index1 = std::distance(flat_mat.begin(), absmax1it);
+    int index1 = absmax1it - flat_mat.begin();
 
     // If max1 = 0, we have a zero matrix and we need to return an empty list
     if (std::abs(max1) < PolySolvers::EPS<P>())
@@ -55,16 +55,18 @@ namespace Eigen34
 
     // For the second step of the Gauss-Jordan pivoting, we will require the
     //  maximum of the elements of the resulting matrix.
-    P max2;                   // The value of the absolute max in the next stage of the elimination (only need 2 stages for 3x3 matrices)
-    int index2;               // the index of the absolute maximum in the next stage of the elimination
-    std::vector<P> flat_mat1; // and the next matrix
+    // initializations silence warnings
+    P max2 = 0;                // The value of the absolute max in the next stage of the elimination (only need 2 stages for 3x3 matrices)
+    int index2 = 0 ;           // the index of the absolute maximum in the next stage of the elimination
+    std::vector<P> flat_mat1;  // and the next matrix
     flat_mat1.reserve(4);
 
     // Variable which contain the coordinates of a vector
     P x1 = 0, x2 = 0, x3 = 0;
 
-    P *pX[3]; // using a pointer array to store permutations of x1, x2, x3
-    P listFinalCoef[2];
+    // initializations silence warnings
+    P *pX[3] = {&x1, &x2, &x3}; // pointer array to store permutations of x1, x2, x3
+    P listFinalCoef[2] = {0, 0};
 
     // Taking cases according to where the maximum lies
     if (index1 == 0)
@@ -75,15 +77,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[7] - ((flat_mat[1] * flat_mat[6]) / max1));
       flat_mat1.push_back(flat_mat[8] - ((flat_mat[2] * flat_mat[6]) / max1));
 
-      // Get the element with maximum absolute value
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x1;
       pX[1] = &x2;
@@ -99,15 +99,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[6] - ((flat_mat[0] * flat_mat[7]) / max1));
       flat_mat1.push_back(flat_mat[8] - ((flat_mat[2] * flat_mat[7]) / max1));
 
-      // Get the element with maximum absolute value
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x2;
       pX[1] = &x1;
@@ -123,15 +121,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[6] - ((flat_mat[0] * flat_mat[8]) / max1));
       flat_mat1.push_back(flat_mat[7] - ((flat_mat[1] * flat_mat[8]) / max1));
 
-      // Get the element with maximum absolute value
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x3;
       pX[1] = &x1;
@@ -147,15 +143,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[7] - ((flat_mat[4] * flat_mat[6]) / max1));
       flat_mat1.push_back(flat_mat[8] - ((flat_mat[5] * flat_mat[6]) / max1));
 
-      // Get the element with maximum absolute value
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x1;
       pX[1] = &x2;
@@ -171,15 +165,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[6] - ((flat_mat[3] * flat_mat[7]) / max1));
       flat_mat1.push_back(flat_mat[8] - ((flat_mat[5] * flat_mat[7]) / max1));
 
-      // Get the element with maximum absolute value
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x2;
       pX[1] = &x1;
@@ -195,15 +187,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[6] - ((flat_mat[8] * flat_mat[3]) / max1));
       flat_mat1.push_back(flat_mat[7] - ((flat_mat[8] * flat_mat[4]) / max1));
 
-      // Get the element with maximum absolute value
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x3;
       pX[1] = &x1;
@@ -219,15 +209,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[4] - ((flat_mat[3] * flat_mat[7]) / max1));
       flat_mat1.push_back(flat_mat[5] - ((flat_mat[3] * flat_mat[8]) / max1));
 
-      // Get the element with maximum absolute value
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x1;
       pX[1] = &x2;
@@ -243,15 +231,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[3] - ((flat_mat[4] * flat_mat[6]) / max1));
       flat_mat1.push_back(flat_mat[5] - ((flat_mat[4] * flat_mat[8]) / max1));
 
-      // Get the element with maximum absolute value
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x2;
       pX[1] = &x1;
@@ -267,15 +253,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[3] - ((flat_mat[5] * flat_mat[6]) / max1));
       flat_mat1.push_back(flat_mat[4] - ((flat_mat[5] * flat_mat[7]) / max1));
 
-      // Get the element with maximum absolute value
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x3;
       pX[1] = &x1;
@@ -370,7 +354,7 @@ namespace Eigen34
                                       { return std::abs(a) < std::abs(b); });
 
     P max1 = *absmax1it;
-    int index1 = std::distance(flat_mat.begin(), absmax1it);
+    int index1 = absmax1it - flat_mat.begin();
 
     // Return empty list if the maximum is zero (zero matrix)
     if (std::abs(max1) < PolySolvers::EPS<P>())
