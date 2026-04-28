@@ -35,15 +35,11 @@ namespace PolySolvers
         if (std::abs(a) < EPS<P>())
         {
             // solve first order system
-            x1 = 0;
-            if (b != 0)
-            {
-                x0 = -c / b;
-                return std::vector<P>({x0});
-            }
+            if (std::abs(b) < EPS<P>())
+                return std::vector<P>();
 
-            x0 = 0;
-            return std::vector<P>();
+            x0 = -c / b;
+            return std::vector<P>({x0});
         }
 
         if (delta == 0)
@@ -93,7 +89,6 @@ namespace PolySolvers
                 return std::vector<P>({x0});
             }
 
-            x2 = 0;
             return SolveQuadratic<P>(b, c, d);
         }
 
@@ -121,16 +116,16 @@ namespace PolySolvers
             }
             else
             {
-                // Use std::cbrt instead of pow
+                // use std::cbrt instead of pow
                 x0 = std::cbrt(2 * R) - b_a_3;
                 return std::vector<P>({x0});
             }
         }
 
-        if (D <= EPS<P>())
+        if (D <= 0)
         {
             /* three real roots */
-            // Clamp the ratio to [-1.0, 1.0] to prevent acos(NaN)
+            // clamp the ratio to [-1.0, 1.0] to prevent acos returning NaN
             P ratio = R / std::sqrt(-Q3);
             ratio = std::max<P>(P(-1), std::min<P>(P(1), ratio));
 
@@ -168,9 +163,20 @@ namespace PolySolvers
         }
 
         /* D > 0, only one real root */
-        // Safely use std::cbrt to handle negative numbers natively
-        AD = std::cbrt(R + std::sqrt(D));
-        BD = (std::abs(AD) < EPS<P>()) ? 0 : -Q / AD;
+
+        /* use std::cbrt to handle negative numbers natively */
+        const P sqrtD = std::sqrt(D);
+        AD = std::cbrt(R + sqrtD);
+        BD = std::cbrt(R - sqrtD);
+
+        /* enforce AD * BD = -Q in a numerically stable way */
+        if (std::abs(AD) >= std::abs(BD)) {
+            if (std::abs(AD) > EPS<P>())
+                BD = -Q / AD;
+        } else {
+            if (std::abs(BD) > EPS<P>())
+                AD = -Q / BD;
+        }
 
         /* calculate the sole real root */
         x0 = AD + BD - b_a_3;
@@ -184,7 +190,7 @@ namespace PolySolvers
     {
         static_assert(std::is_floating_point<P>::value, "SolveQuartic requires a floating point type!");
 
-        // Shortcut to cubic if constant is zero...
+        // shortcut to cubic if coefficient is zero...
         if (std::abs(a) < EPS<P>())
         {
             // 0 is a guaranteed root. Factor out x and solve the remaining cubic.
@@ -306,6 +312,60 @@ namespace PolySolvers
         default:
             return std::vector<P>(); // just to shut the compiler up....
                                      // break;
+        }
+    }
+
+    ////// Root polishing with Newton's method
+
+    // polish each root of a cubic polynomial
+    template <typename P>
+    void PolishCubicRoots(P a, P b, P c, P d, std::vector<P>& roots)
+    {
+        constexpr int MAX_ITER = 2;
+        constexpr P POLISH_TOL = P(4) * PolySolvers::EPS<P>(); // ~4 ULP convergence
+
+        for (auto& r : roots)
+        {
+            for (int i = 0; i < MAX_ITER; ++i)
+            {
+                P fx  = ((a * r + b) * r + c) * r + d; // f(x)
+                P dfx = (P(3) * a * r + P(2) * b) * r + c; // f'(x)
+
+                if (std::abs(dfx) <= PolySolvers::EPS<P>() * (P(1) + std::abs(r)))
+                    break;  // near critical point
+
+                P step = fx / dfx;
+                r -= step;
+
+                if (std::abs(step) <= POLISH_TOL * (P(1) + std::abs(r)))
+                    break;
+            }
+        }
+    }
+
+    // polish each root of a quartic polynomial
+    template <typename P>
+    void PolishQuarticRoots(P a, P b, P c, P d, P e, std::vector<P>& roots)
+    {
+        constexpr int MAX_ITER = 3;  // quartic may benefit from an extra step
+        constexpr P POLISH_TOL = P(4) * PolySolvers::EPS<P>(); // ~4 ULP convergence
+
+        for (auto& r : roots)
+        {
+            for (int i = 0; i < MAX_ITER; ++i)
+            {
+                P fx = (((a * r + b) * r + c) * r + d) * r + e; // f(x)
+                P dfx = ((P(4) * a * r + P(3) * b) * r + P(2) * c) * r + d; // f'(x)
+
+                if (std::abs(dfx) <= PolySolvers::EPS<P>() * (P(1) + std::abs(r)))
+                    break;
+
+                P step = fx / dfx;
+                r -= step;
+
+                if (std::abs(step) <= POLISH_TOL * (P(1) + std::abs(r)))
+                    break;
+            }
         }
     }
 
