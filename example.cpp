@@ -113,6 +113,7 @@ int main()
   VerifyEigenDecomposition<4>(B, decomposition4x4);
 
   // 3. Eigen-decomposition for a 4x4 positive semi-definite matrix
+  //    This example also demonstrates matrix scaling
   float C[] = {0.64444, 0.12222, 0.53333, 1.25556,
                0.12222, 0.41111, 0.56667, 0.67778,
                0.53333, 0.56667, 1.00000, 1.56667,
@@ -128,7 +129,19 @@ int main()
        << "    " << C[12] << " , " << C[13] << " , " << C[14] << " , " << C[15] << " ] " << endl
        << endl;
 
-  decomposition4x4 = Eigen34::EigenDecompose4x4(C);
+  float frob_norm = 0.0;
+  for (int i = 0; i < 16; i++)
+    frob_norm += C[i] * C[i]; // Frobenius
+  frob_norm = 1 / std::sqrt(frob_norm);
+  // scale in nC, avoiding to destroy C
+  float nC[sizeof(C) / sizeof(C[0])];
+  for (int i = 0; i < 16; i++)
+    nC[i] = C[i] * frob_norm;
+
+  decomposition4x4 = Eigen34::EigenDecompose4x4(nC);
+  for (auto& e : decomposition4x4.first)
+    e /= frob_norm; // undo scaling: divide by inverse
+
   // print the eigenvalues and respective eigenvectors
   for (size_t i = 0; i < decomposition4x4.first.size(); i++)
   {
@@ -136,7 +149,7 @@ int main()
          << " | Eigenvector : [ " << decomposition4x4.second[i][0] << " , " << decomposition4x4.second[i][1] << " , " << decomposition4x4.second[i][2]
          << " , " << decomposition4x4.second[i][3] << " ]" << endl;
   }
-  // verify the decomposition
+  // verify the decomposition for the unscaled C
   VerifyEigenDecomposition<4>(C, decomposition4x4);
 
   return 1;
