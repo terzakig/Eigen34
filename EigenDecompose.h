@@ -26,6 +26,26 @@
 //
 namespace Eigen34
 {
+  template <typename P>
+  std::vector<P> GaussJordan3x3(const std::vector<P>& flat_mat);
+
+  template <typename P>
+  std::vector<P> ComputeNullVector3x3(const std::vector<P>& flat_mat);
+
+  namespace detail {
+    // Compile-time choice of solver for 3x3 homogeneous systems (A-lam*I)*x = 0 :
+    // true  -> row cross-products (null vector) method
+    // false -> Gauss–Jordan elimination
+    template <typename P, bool UseNullVectorMethod = true>
+    std::vector<P> computeEigenVector3(const std::vector<P>& flat_mat)
+    {
+      if constexpr (UseNullVectorMethod)
+        return ComputeNullVector3x3(flat_mat);
+      else
+        return GaussJordan3x3(flat_mat);
+    }
+  }
+
 
   /// <summary>
   /// This function performs two steps of Gauss-Jordan elimination in a 3x3 matrix.
@@ -47,24 +67,26 @@ namespace Eigen34
     P max1 = *absmax1it;
 
     // Get the index of max (in absolute value)
-    int index1 = std::distance(flat_mat.begin(), absmax1it);
+    int index1 = absmax1it - flat_mat.begin();
 
-    // If max1 = 0, we have a zero matrix and we need to return an empty list
-    if (max1 == 0)
+    // Return empty vector if the maximum is zero (zero matrix)
+    if (std::abs(max1) < PolySolvers::EPS<P>())
       return std::vector<P>();
 
     // For the second step of the Gauss-Jordan pivoting, we will require the
     //  maximum of the elements of the resulting matrix.
-    P max2;                   // The value of the absolute max in the next stage of the elimination (only need 2 stages for 3x3 matrices)
-    int index2;               // the index of the absolute maximum in the next stage of the elimination
-    std::vector<P> flat_mat1; // and the next matrix
+    // initializations silence warnings
+    P max2 = 0;                // The value of the absolute max in the next stage of the elimination (only need 2 stages for 3x3 matrices)
+    int index2 = 0 ;           // the index of the absolute maximum in the next stage of the elimination
+    std::vector<P> flat_mat1;  // and the next matrix
     flat_mat1.reserve(4);
 
     // Variable which contain the coordinates of a vector
     P x1 = 0, x2 = 0, x3 = 0;
 
-    P *pX[3]; // using a pointer array to store permutations of x1, x2, x3
-    P listFinalCoef[2];
+    // initializations silence warnings
+    P *pX[3] = {&x1, &x2, &x3}; // pointer array to store permutations of x1, x2, x3
+    P listFinalCoef[2] = {0, 0};
 
     // Taking cases according to where the maximum lies
     if (index1 == 0)
@@ -75,15 +97,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[7] - ((flat_mat[1] * flat_mat[6]) / max1));
       flat_mat1.push_back(flat_mat[8] - ((flat_mat[2] * flat_mat[6]) / max1));
 
-      // Get maximum and minimum elements (in order to get the maximum in absolute value)
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x1;
       pX[1] = &x2;
@@ -99,15 +119,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[6] - ((flat_mat[0] * flat_mat[7]) / max1));
       flat_mat1.push_back(flat_mat[8] - ((flat_mat[2] * flat_mat[7]) / max1));
 
-      // Get maximum and minimum elements (in order to get the maximum in absolute value)
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x2;
       pX[1] = &x1;
@@ -123,15 +141,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[6] - ((flat_mat[0] * flat_mat[8]) / max1));
       flat_mat1.push_back(flat_mat[7] - ((flat_mat[1] * flat_mat[8]) / max1));
 
-      // Get maximum and minimum elements (in order to get the maximum in absolute value)
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x3;
       pX[1] = &x1;
@@ -147,15 +163,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[7] - ((flat_mat[4] * flat_mat[6]) / max1));
       flat_mat1.push_back(flat_mat[8] - ((flat_mat[5] * flat_mat[6]) / max1));
 
-      // Get maximum and minimum elements (in order to get the maximum in absolute value)
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x1;
       pX[1] = &x2;
@@ -171,15 +185,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[6] - ((flat_mat[3] * flat_mat[7]) / max1));
       flat_mat1.push_back(flat_mat[8] - ((flat_mat[5] * flat_mat[7]) / max1));
 
-      // Get maximum and minimum elements (in order to get the maximum in absolute value)
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x2;
       pX[1] = &x1;
@@ -195,15 +207,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[6] - ((flat_mat[8] * flat_mat[3]) / max1));
       flat_mat1.push_back(flat_mat[7] - ((flat_mat[8] * flat_mat[4]) / max1));
 
-      // Get maximum and minimum elements (in order to get the maximum in absolute value)
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x3;
       pX[1] = &x1;
@@ -219,15 +229,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[4] - ((flat_mat[3] * flat_mat[7]) / max1));
       flat_mat1.push_back(flat_mat[5] - ((flat_mat[3] * flat_mat[8]) / max1));
 
-      // Get maximum and minimum elements (in order to get the maximum in absolute value)
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x1;
       pX[1] = &x2;
@@ -243,15 +251,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[3] - ((flat_mat[4] * flat_mat[6]) / max1));
       flat_mat1.push_back(flat_mat[5] - ((flat_mat[4] * flat_mat[8]) / max1));
 
-      // Get maximum and minimum elements (in order to get the maximum in absolute value)
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x2;
       pX[1] = &x1;
@@ -267,15 +273,13 @@ namespace Eigen34
       flat_mat1.push_back(flat_mat[3] - ((flat_mat[5] * flat_mat[6]) / max1));
       flat_mat1.push_back(flat_mat[4] - ((flat_mat[5] * flat_mat[7]) / max1));
 
-      // Get maximum and minimum elements (in order to get the maximum in absolute value)
+      // Get the element with maximum absolute value and its index
       auto absmax2it = std::max_element(flat_mat1.begin(),
                                         flat_mat1.end(),
                                         [](P a, P b)
                                         { return std::abs(a) < std::abs(b); });
       max2 = *absmax2it;
-
-      // NOTE: Now max2it points to the absolute maximum !
-      index2 = std::distance(flat_mat1.begin(), absmax2it);
+      index2 = absmax2it - flat_mat1.begin();
 
       pX[0] = &x3;
       pX[1] = &x1;
@@ -285,34 +289,141 @@ namespace Eigen34
       listFinalCoef[1] = flat_mat[7];
     }
 
-    if (index2 == 0)
+    if (std::abs(max2) != P(0))
     {
-      *(pX[2]) = 1;
-      *(pX[1]) = -flat_mat1[1] / max2;
+      if (index2 == 0)
+      {
+        *(pX[2]) = 1;
+        *(pX[1]) = -flat_mat1[1] / max2;
+      }
+      else if (index2 == 1)
+      {
+        *(pX[2]) = -flat_mat1[0] / max2;
+        *(pX[1]) = 1;
+      }
+      else if (index2 == 2)
+      {
+        *(pX[2]) = 1;
+        *(pX[1]) = -flat_mat1[3] / max2;
+      }
+      else if (index2 == 3)
+      {
+        *(pX[2]) = -flat_mat1[2] / max2;
+        *(pX[1]) = 1;
+      }
     }
-    else if (index2 == 1)
+    else
     {
-      *(pX[2]) = -flat_mat1[0] / max2;
-      *(pX[1]) = 1;
-    }
-    else if (index2 == 2)
-    {
-      *(pX[2]) = 1;
-      *(pX[1]) = -flat_mat1[3] / max2;
-    }
-    else if (index2 == 3)
-    {
-      *(pX[2]) = -flat_mat1[2] / max2;
+      // zero 2x2 sub-block, system is underdetermined
+      // pick an arbitrary but valid vector in the null space
+
+      *(pX[2]) = 0;
       *(pX[1]) = 1;
     }
 
     *(pX[0]) = -((listFinalCoef[0] * *(pX[1])) / max1) - ((listFinalCoef[1] * *(pX[2])) / max1);
 
-    // normalize
-    P invnorm = 1 / std::sqrt(x1 * x1 + x2 * x2 + x3 * x3);
+    // normalize the solution
+    P normSq = x1 * x1 + x2 * x2 + x3 * x3;
+    if (normSq == P(0))
+      return std::vector<P>(); // return empty vector
+    P invnorm = P(1) / std::sqrt(normSq);
 
     return std::vector<P>({x1 * invnorm, x2 * invnorm, x3 * invnorm});
   }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////
+  /// Computes the eigenvector for a specific real eigenvalue lambda
+  /// from the *characteristic* matrix M = A - lambda*I of a 3x3 matrix A.
+  /// This is a cleaner alternative to GaussJordan3x3()
+  ///
+  /// Note: the function accepts matrix M, not A!
+  ///       More importantly, it breaks in case of nearly multiple eigenvalues.
+  ///
+  /// Based on the observation that the rows of M = (A−lambda*I) are orthogonal to
+  /// the eigenvector so the cross product of any two rows yields the eigenvector.
+  ///
+  /// Robustness comes from the fact that M is singular (rank <= 2). If we pick two
+  /// nearly parallel rows, their cross product will be numerically zero.
+  /// This is mitigated by calculating all possible row-pair cross products and choosing
+  /// the largest magnitude one
+  template <typename P>
+  std::vector<P> ComputeNullVector3x3(const std::vector<P>& flat_mat)
+  {
+    // Rows as pointers to flat_mat
+    const P *M = flat_mat.data();
+    const P *row0 = M + 0;
+    const P *row1 = M + 3;
+    const P *row2 = M + 6;
+
+    // Compute all possible cross products between rows
+    auto crossprod = [](const P *a, const P *b, P *axb)
+    {
+      axb[0] = a[1] * b[2] - a[2] * b[1];
+      axb[1] = a[2] * b[0] - a[0] * b[2];
+      axb[2] = a[0] * b[1] - a[1] * b[0];
+    };
+    P v01[3], v12[3], v20[3];
+    crossprod(row0, row1, v01);
+    crossprod(row1, row2, v12);
+    crossprod(row2, row0, v20);
+
+    // Find which cross product has the largest magnitude
+    // (This avoids issues with parallel or zero rows)
+    P d01 = v01[0] * v01[0] + v01[1] * v01[1] + v01[2] * v01[2];
+    P d12 = v12[0] * v12[0] + v12[1] * v12[1] + v12[2] * v12[2];
+    P d20 = v20[0] * v20[0] + v20[1] * v20[1] + v20[2] * v20[2];
+
+    P *res, normsq;
+    if (d01 >= d12 && d01 >= d20) {
+      res = v01;
+      normsq = d01;
+    } else if (d12 >= d01 && d12 >= d20) {
+      res = v12;
+      normsq = d12;
+    } else {
+      res = v20;
+      normsq = d20;
+    }
+
+    std::vector<P> evec({res[0], res[1], res[2]});
+
+    // Final check: If all cross products are zero, the matrix might
+    // have rank 1 (multiple eigenvalues). In that case, we pick
+    // a row and find any vector orthogonal to it.
+    constexpr P eps_sq = PolySolvers::EPS<P>() * PolySolvers::EPS<P>();
+    if (normsq < eps_sq) {
+        // fallback for rank-1 cases (degenerate matrices)
+        if (row0[0] * row0[0] + row0[1] * row0[1] + row0[2] * row0[2] > eps_sq) {
+          if (std::abs(row0[0]) > std::abs(row0[2])) {
+            evec[0] = -row0[1];
+            evec[1] =  row0[0];
+            evec[2] = 0;
+          }
+          else {
+            evec[0] = 0;
+            evec[1] = -row0[2];
+            evec[2] =  row0[1];
+          }
+        } else {
+          // absolute degenerate case
+          evec[0] = 1;
+          evec[1] = evec[2] = 0;
+        }
+    }
+
+    // normalize
+    P nrm = std::sqrt(evec[0] * evec[0] + evec[1] * evec[1] + evec[2] * evec[2]);
+    if (nrm > PolySolvers::EPS<P>()) {
+      nrm = 1 / nrm;
+      evec[0] *= nrm;
+      evec[1] *= nrm;
+      evec[2] *= nrm;
+    }
+
+    return evec;
+  }
+  ///////////////////////////////////////////////////////////////////////////////////////////////
 
   ///
   /// This function eliminates the coefficients of the column "col" based on an element at (row, col)
@@ -356,168 +467,171 @@ namespace Eigen34
                                       { return std::abs(a) < std::abs(b); });
 
     P max1 = *absmax1it;
-    int index1 = std::distance(flat_mat.begin(), absmax1it);
+    int index1 = absmax1it - flat_mat.begin();
 
-    // Return empty list if the maximum is zero (zero matrix)
-    if (max1 == 0)
+    // Return empty vector if the maximum is zero (zero matrix)
+    if (std::abs(max1) < PolySolvers::EPS<P>())
       return std::vector<P>();
 
-    // Create new variable which are use after.
+    // Create new variable which is used later.
     std::vector<P> flat_mat1;
 
     P x1 = 0, x2 = 0, x3 = 0, x4 = 0;
     // Cache for the result of 3x3 Gauss Jordan elimination
-    std::vector<P> resultGaussJordan3x3;
+    std::vector<P> reducedEigenVec;
 
     if (index1 == 0)
     {
-      /// We use the GaussJordan3x3 solver after the first step, which is the elimination of coefficients along column 0.
+      // We solve the reduced 3x3 system after eliminating column 0
       flat_mat1 = GaussJordanFirstStep(flat_mat, 0, 0);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x2 = resultGaussJordan3x3[0];
-      x3 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x1 = -(1 / flat_mat[0]) * (flat_mat[1] * x2 + flat_mat[2] * x3 + flat_mat[3] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x2 = reducedEigenVec[0];
+      x3 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x1 = -(flat_mat[1] * x2 + flat_mat[2] * x3 + flat_mat[3] * x4) / flat_mat[0];
     }
     else if (index1 == 1)
     {
-      /// We use the GaussJordan3x3 solver after the first step, which is the elimination of coefficients along column 1.
+      // We solve the reduced 3x3 system after eliminating column 1
       flat_mat1 = GaussJordanFirstStep(flat_mat, 0, 1);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x3 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x2 = -(1 / flat_mat[1]) * (flat_mat[0] * x1 + flat_mat[2] * x3 + flat_mat[3] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x3 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x2 = -(flat_mat[0] * x1 + flat_mat[2] * x3 + flat_mat[3] * x4) / flat_mat[1];
     }
     else if (index1 == 2)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 0, 2);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x2 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x3 = -(1 / flat_mat[2]) * (flat_mat[0] * x1 + flat_mat[1] * x2 + flat_mat[3] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x2 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x3 = -(flat_mat[0] * x1 + flat_mat[1] * x2 + flat_mat[3] * x4) / flat_mat[2];
     }
     else if (index1 == 3)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 0, 3);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x2 = resultGaussJordan3x3[1];
-      x3 = resultGaussJordan3x3[2];
-      x4 = -(1 / flat_mat[3]) * (flat_mat[0] * x1 + flat_mat[1] * x2 + flat_mat[2] * x3);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x2 = reducedEigenVec[1];
+      x3 = reducedEigenVec[2];
+      x4 = -(flat_mat[0] * x1 + flat_mat[1] * x2 + flat_mat[2] * x3) / flat_mat[3];
     }
     else if (index1 == 4)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 1, 0);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x2 = resultGaussJordan3x3[0];
-      x3 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x1 = -(1 / flat_mat[4]) * (flat_mat[5] * x2 + flat_mat[6] * x3 + flat_mat[7] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x2 = reducedEigenVec[0];
+      x3 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x1 = -(flat_mat[5] * x2 + flat_mat[6] * x3 + flat_mat[7] * x4) / flat_mat[4];
     }
     else if (index1 == 5)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 1, 1);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x3 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x2 = -(1 / flat_mat[5]) * (flat_mat[4] * x1 + flat_mat[6] * x3 + flat_mat[7] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x3 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x2 = -(flat_mat[4] * x1 + flat_mat[6] * x3 + flat_mat[7] * x4) / flat_mat[5];
     }
     else if (index1 == 6)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 1, 2);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x2 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x3 = -(1 / flat_mat[6]) * (flat_mat[4] * x1 + flat_mat[5] * x2 + flat_mat[7] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x2 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x3 = -(flat_mat[4] * x1 + flat_mat[5] * x2 + flat_mat[7] * x4) / flat_mat[6];
     }
     else if (index1 == 7)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 1, 3);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x2 = resultGaussJordan3x3[1];
-      x3 = resultGaussJordan3x3[2];
-      x4 = -(1 / flat_mat[7]) * (flat_mat[4] * x1 + flat_mat[5] * x2 + flat_mat[6] * x3);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x2 = reducedEigenVec[1];
+      x3 = reducedEigenVec[2];
+      x4 = -(flat_mat[4] * x1 + flat_mat[5] * x2 + flat_mat[6] * x3) / flat_mat[7];
     }
     else if (index1 == 8)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 2, 0);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x2 = resultGaussJordan3x3[0];
-      x3 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x1 = -(1 / flat_mat[8]) * (flat_mat[9] * x2 + flat_mat[10] * x3 + flat_mat[11] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x2 = reducedEigenVec[0];
+      x3 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x1 = -(flat_mat[9] * x2 + flat_mat[10] * x3 + flat_mat[11] * x4) / flat_mat[8];
     }
     else if (index1 == 9)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 2, 1);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x3 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x2 = -(1 / flat_mat[9]) * (flat_mat[8] * x1 + flat_mat[10] * x3 + flat_mat[11] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x3 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x2 = -(flat_mat[8] * x1 + flat_mat[10] * x3 + flat_mat[11] * x4) / flat_mat[9];
     }
     else if (index1 == 10)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 2, 2);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x2 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x3 = -(1 / flat_mat[10]) * (flat_mat[8] * x1 + flat_mat[9] * x2 + flat_mat[11] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x2 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x3 = -(flat_mat[8] * x1 + flat_mat[9] * x2 + flat_mat[11] * x4) / flat_mat[10];
     }
     else if (index1 == 11)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 2, 3);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x2 = resultGaussJordan3x3[1];
-      x3 = resultGaussJordan3x3[2];
-      x4 = -(1 / flat_mat[11]) * (flat_mat[8] * x1 + flat_mat[9] * x2 + flat_mat[10] * x3);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x2 = reducedEigenVec[1];
+      x3 = reducedEigenVec[2];
+      x4 = -(flat_mat[8] * x1 + flat_mat[9] * x2 + flat_mat[10] * x3) / flat_mat[11];
     }
     else if (index1 == 12)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 3, 0);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x2 = resultGaussJordan3x3[0];
-      x3 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x1 = -(1 / flat_mat[12]) * (flat_mat[13] * x2 + flat_mat[14] * x3 + flat_mat[15] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x2 = reducedEigenVec[0];
+      x3 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x1 = -(flat_mat[13] * x2 + flat_mat[14] * x3 + flat_mat[15] * x4) / flat_mat[12];
     }
     else if (index1 == 13)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 3, 1);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x3 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x2 = -(1 / flat_mat[13]) * (flat_mat[12] * x1 + flat_mat[14] * x3 + flat_mat[15] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x3 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x2 = -(flat_mat[12] * x1 + flat_mat[14] * x3 + flat_mat[15] * x4) / flat_mat[13];
     }
     else if (index1 == 14)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 3, 2);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x2 = resultGaussJordan3x3[1];
-      x4 = resultGaussJordan3x3[2];
-      x3 = -(1 / flat_mat[14]) * (flat_mat[12] * x1 + flat_mat[13] * x2 + flat_mat[15] * x4);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x2 = reducedEigenVec[1];
+      x4 = reducedEigenVec[2];
+      x3 = -(flat_mat[12] * x1 + flat_mat[13] * x2 + flat_mat[15] * x4) / flat_mat[14];
     }
     else if (index1 == 15)
     {
       flat_mat1 = GaussJordanFirstStep(flat_mat, 3, 3);
-      resultGaussJordan3x3 = GaussJordan3x3(flat_mat1);
-      x1 = resultGaussJordan3x3[0];
-      x2 = resultGaussJordan3x3[1];
-      x3 = resultGaussJordan3x3[2];
-      x4 = -(1 / flat_mat[15]) * (flat_mat[12] * x1 + flat_mat[13] * x2 + flat_mat[14] * x3);
+      reducedEigenVec = detail::computeEigenVector3(flat_mat1);
+      x1 = reducedEigenVec[0];
+      x2 = reducedEigenVec[1];
+      x3 = reducedEigenVec[2];
+      x4 = -(flat_mat[12] * x1 + flat_mat[13] * x2 + flat_mat[14] * x3) / flat_mat[15];
     }
 
     // normalize the solution
-    P invnorm = 1 / std::sqrt(x1 * x1 + x2 * x2 + x3 * x3 + x4 * x4);
+    P normSq = x1 * x1 + x2 * x2 + x3 * x3 + x4 * x4;
+    if (normSq == P(0))
+      return std::vector<P>(); // return empty vector
+    P invnorm = P(1) / std::sqrt(normSq);
 
     return std::vector<P>({x1 * invnorm, x2 * invnorm, x3 * invnorm, x4 * invnorm});
   }
@@ -654,22 +768,18 @@ namespace Eigen34
   template <typename P>
   std::vector<P> EigenValues3x3(const P *array)
   {
+    P a00 = array[0 * 3 + 0], a01 = array[0 * 3 + 1], a02 = array[0 * 3 + 2];
+    P a10 = array[1 * 3 + 0], a11 = array[1 * 3 + 1], a12 = array[1 * 3 + 2];
+    P a20 = array[2 * 3 + 0], a21 = array[2 * 3 + 1], a22 = array[2 * 3 + 2];
 
     P coef1 = -1;
-    P coef2 = (array[0 * 3 + 0] + array[1 * 3 + 1] + array[2 * 3 + 2]);
-    P coef3 = (array[2 * 3 + 0] * array[0 * 3 + 2]) +
-              (array[1 * 3 + 0] * array[0 * 3 + 1]) +
-              (array[1 * 3 + 2] * array[2 * 3 + 1]) -
-              (array[0 * 3 + 0] * array[1 * 3 + 1]) -
-              (array[0 * 3 + 0] * array[2 * 3 + 2]) -
-              (array[1 * 3 + 1] * array[2 * 3 + 2]);
+    P coef2 = (a00 + a11 + a22);
+    P coef3 = (a20 * a02) + (a10 * a01) + (a12 * a21) -
+              (a00 * a11) - (a00 * a22) - (a11 * a22);
 
-    P coef4 = (array[0 * 3 + 0] * array[1 * 3 + 1] * array[2 * 3 + 2]) +
-              (array[0 * 3 + 1] * array[2 * 3 + 0] * array[1 * 3 + 2]) +
-              (array[0 * 3 + 2] * array[1 * 3 + 0] * array[2 * 3 + 1]) -
-              (array[0 * 3 + 0] * array[1 * 3 + 2] * array[2 * 3 + 1]) -
-              (array[0 * 3 + 1] * array[1 * 3 + 0] * array[2 * 3 + 2]) -
-              (array[0 * 3 + 2] * array[2 * 3 + 0] * array[1 * 3 + 1]);
+    P coef4 = (a00 * a11 * a22) + (a01 * a20 * a12) +
+              (a02 * a10 * a21) - (a00 * a12 * a21) -
+              (a01 * a10 * a22) - (a02 * a20 * a11);
 
     std::vector<P> solution = PolySolvers::SolveCubic(coef1, coef2, coef3, coef4);
 
@@ -688,33 +798,18 @@ namespace Eigen34
     auto eigenvalues = EigenValues4x4(M);
     if (eigenvalues.size() == 0)
       return std::vector<P>({0, 0, 0, 0});
-    // auto absmaxit = std::max_element( eigenvalues.begin(),
-    //			   eigenvalues.end() ,
-    //			   [](P a, P b) { return std::abs(a) < std::abs(b);}
-    //			  );
-    // P lambda = *absmaxit;
-    P lambda = eigenvalues[eigenvalues.size() - 1]; // returning the largest eigenvalue (instead of the largest in absolute value)
+
+    P lambda = eigenvalues[eigenvalues.size() - 1]; // get the largest eigenvalue
     if (lambda == 0)
       return std::vector<P>({0, 0, 0, 0});
+
     // Now obtain a vector containing the M-lambda * eye(3)
-    std::vector<P> A;
-    A.reserve(16);
-    A.push_back(M[0] - lambda);
-    A.push_back(M[1]);
-    A.push_back(M[2]);
-    A.push_back(M[3]);
-    A.push_back(M[4]);
-    A.push_back(M[5] - lambda);
-    A.push_back(M[6]);
-    A.push_back(M[7]);
-    A.push_back(M[8]);
-    A.push_back(M[9]);
-    A.push_back(M[10] - lambda);
-    A.push_back(M[11]);
-    A.push_back(M[12]);
-    A.push_back(M[13]);
-    A.push_back(M[14]);
-    A.push_back(M[15] - lambda);
+    std::vector<P> A = {
+      M[0] - lambda, M[1],          M[2],           M[3],
+      M[4],          M[5] - lambda, M[6],           M[7],
+      M[8],          M[9],          M[10] - lambda, M[11],
+      M[12],         M[13],         M[14],          M[15] - lambda
+    };
 
     // Now get the eigenvector using the Gauss-Jordan steps
     return GaussJordan4x4(A);
@@ -729,32 +824,21 @@ namespace Eigen34
     auto eigenvalues = EigenValues3x3(M);
     if (eigenvalues.size() == 0)
       return std::vector<P>({0, 0, 0});
-    // auto maxit = std::max_element( eigenvalues.begin(),
-    //			   eigenvalues.end() ,
-    //			   [](P a, P b) { return std::abs(a) < std::abs(b); }
-    //			 );
 
-    // P lambda = *maxit;
     P lambda = eigenvalues[eigenvalues.size() - 1]; // get the largest eigenvalue
     // if there are only zero eigenvalues, return the zero vector
     if (lambda == 0)
       return std::vector<P>({0, 0, 0}); // extra check
 
     // Now obtain a vector containing the M-lambda * eye(3)
-    std::vector<P> A;
-    A.reserve(9);
-    A.push_back(M[0] - lambda);
-    A.push_back(M[1]);
-    A.push_back(M[2]);
-    A.push_back(M[3]);
-    A.push_back(M[4] - lambda);
-    A.push_back(M[5]);
-    A.push_back(M[6]);
-    A.push_back(M[7]);
-    A.push_back(M[8] - lambda);
+    std::vector<P> A = {
+      M[0] - lambda, M[1],          M[2],
+      M[3],          M[4] - lambda, M[5],
+      M[6],          M[7],          M[8] - lambda
+    };
 
-    // Now get the eigenvector using the Gauss-Jordan steps
-    return GaussJordan3x3(A);
+    // Now get the eigenvector
+    return detail::computeEigenVector3(A);
   }
 
   // 3x3 Matrix eigen decomposition
@@ -765,31 +849,36 @@ namespace Eigen34
 
     // First obtain the eigenvalues of M
     auto eigenvalues = EigenValues3x3(M);
+
+    // if failed, return an empty eigenvalue list and empty eigenvectors
+    if (eigenvalues.size() == 0)
+      return std::pair<std::vector<P>, std::vector<std::vector<P>>>(eigenvalues, std::vector<std::vector<P>>{});
+
+    std::vector<P> A = {
+      M[0], M[1], M[2],
+      M[3], M[4], M[5],
+      M[6], M[7], M[8]
+    };
+
     // vector of eigenvectors
     std::vector<std::vector<P>> eigenvectors;
-    // return an empty eigenvalue list and a single eigenvector with zeros in it
-    if (eigenvalues.size() == 0)
-      return std::pair<std::vector<P>, std::vector<std::vector<P>>>(eigenvalues, eigenvectors);
-
-    std::vector<P> A({M[0], M[1], M[2],
-                      M[3], M[4], M[5],
-                      M[6], M[7], M[8]});
-
     eigenvectors.reserve(3);
     for (size_t i = 0; i < eigenvalues.size(); i++)
     {
+      const P eigval = eigenvalues[i];
+
       // Now subtract the eigenvalue from the diagonal
-      A[0] -= eigenvalues[i];
-      A[4] -= eigenvalues[i];
-      A[8] -= eigenvalues[i];
+      A[0] -= eigval;
+      A[4] -= eigval;
+      A[8] -= eigval;
 
       // compute and add the eigen vector to the list
-      eigenvectors.push_back(GaussJordan3x3(A));
+      eigenvectors.emplace_back(detail::computeEigenVector3(A));
 
       // add the eigenvalue back to the diagonal in order to undo the change in the elements of A
-      A[0] += eigenvalues[i];
-      A[4] += eigenvalues[i];
-      A[8] += eigenvalues[i];
+      A[0] += eigval;
+      A[4] += eigval;
+      A[8] += eigval;
     }
 
     // return the decomposition (in ascending eigenvalue order)
@@ -804,35 +893,39 @@ namespace Eigen34
 
     // First obtain the eigenvalues of M
     auto eigenvalues = EigenValues4x4(M);
+
+    // if failed, return an empty eigenvalue list and empty eigenvectors
+    if (eigenvalues.size() == 0)
+      return std::pair<std::vector<P>, std::vector<std::vector<P>>>(eigenvalues, std::vector<std::vector<P>>{});
+
+    std::vector<P> A = {
+      M[0], M[1], M[2], M[3],
+      M[4], M[5], M[6], M[7],
+      M[8], M[9], M[10], M[11],
+      M[12], M[13], M[14], M[15]
+    };
+
     // vector of eigenvectors
     std::vector<std::vector<P>> eigenvectors;
-
-    // return an empty eigenvalue list and a single eigenvector with zeros in it
-    if (eigenvalues.size() == 0)
-      return std::pair<std::vector<P>, std::vector<std::vector<P>>>(eigenvalues, eigenvectors);
-
-    std::vector<P> A({M[0], M[1], M[2], M[3],
-                      M[4], M[5], M[6], M[7],
-                      M[8], M[9], M[10], M[11],
-                      M[12], M[13], M[14], M[15]});
-
     eigenvectors.reserve(4);
     for (size_t i = 0; i < eigenvalues.size(); i++)
     {
+      const P eigval = eigenvalues[i];
+
       // Now subtract the eigenvalue from the diagonal
-      A[0] -= eigenvalues[i];
-      A[5] -= eigenvalues[i];
-      A[10] -= eigenvalues[i];
-      A[15] -= eigenvalues[i];
+      A[0] -= eigval;
+      A[5] -= eigval;
+      A[10] -= eigval;
+      A[15] -= eigval;
 
       // compute and add the eigen vector to the list
-      eigenvectors.push_back(GaussJordan4x4(A));
+      eigenvectors.emplace_back(GaussJordan4x4(A));
 
       // add the eigenvalue back to the diagonal in order to undo the change in the elements of A
-      A[0] += eigenvalues[i];
-      A[5] += eigenvalues[i];
-      A[10] += eigenvalues[i];
-      A[15] += eigenvalues[i];
+      A[0] += eigval;
+      A[5] += eigval;
+      A[10] += eigval;
+      A[15] += eigval;
     }
 
     // return the decomposition (in ascending eigenvalue order)
